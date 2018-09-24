@@ -1,0 +1,11 @@
+{
+    "name": "pulse-test",
+    "dependencies": {
+        "core": "*"
+    },
+    "description": "Simple (test) pulse calculation functions for the micro:bit, to be used with openpulse.com amped sensor",
+    "files": [
+        "README.md",
+        "pulse.ts"
+    ]
+}
