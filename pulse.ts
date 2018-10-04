@@ -132,7 +132,7 @@ namespace amped {
     }
 
     function findAmp() {
-        return Math.round(((Peak + Trough) / 2) + Trough)
+        return (Peak - Trough)
     }
 
     function findMax(array: number[]) {                            // !! highly inefficient, but we deal with that once it works
