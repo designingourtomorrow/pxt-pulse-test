@@ -16,8 +16,7 @@ namespace graphing {
     }
 
     /**
-    * helper function for mapping calculation brings any number to 25
-    * this means we can use the LEDs to graph nicely
+    * map value to 25
     * @param value describe value here eg: 216
     * @param target describe target here eg: 10000
     */
