@@ -6,6 +6,28 @@
 /**
  * Custom blocks
  */
+
+//% weight=59 color=#444A84 icon="\uf051" block="DOT Graphing"
+
+namespace graphing {
+    
+    export function integerMap(value: number, inputLow: number, inputHigh: number, outputLow: number, outputHigh: number): number {
+        return (value - inputLow) * (outputHigh - outputLow) / (inputHigh - inputLow) + outputLow
+    }
+
+    /**
+    * helper function for mapping calculation brings any number to 25
+    * this means we can use the LEDs to graph nicely
+    * @param value describe value here eg: 216
+    * @param target describe target here eg: 10000
+    */
+    
+    //% block "map your $value out of $target to a number out of 25"
+    export function mapTo25(value: number, target: number): number {
+        return integerMap(value, 0, target, 0, 25) - 1
+    }
+}
+
 //% weight=60 color=#444A84 icon="\uf051" block="DOT Pulse"
 namespace amped {
 
