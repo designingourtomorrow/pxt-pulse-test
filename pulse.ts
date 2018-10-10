@@ -1,5 +1,7 @@
 /**
- * This code is created for the Pulse Sensor Amped open platform and based on the code they kindly made available
+ * This code is created for the Pulse Sensor Amped open platform
+ * and the BPM calculator is based on the code kindly made available by
+ * World Famous Electronics, creators of the Pulse Sensor Amped
  */
 
 /**
