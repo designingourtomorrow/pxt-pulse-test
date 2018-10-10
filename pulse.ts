@@ -6,235 +6,35 @@
  * Custom blocks
  */
 
-//% weight=59 color=#444A84 icon="\uf051" block="DOT Graphing"
+//% weight=58 color=#444A84 icon="\uf118" block="DOT Pulse"
 
-namespace graphing {
-
-    export function integerMap(value: number, inputLow: number, inputHigh: number, outputLow: number, outputHigh: number): number {
-        return (value - inputLow) * (outputHigh - outputLow) / (inputHigh - inputLow) + outputLow
-    }
-
-    /**
-    * helper function for mapping calculation brings any number to 25
-    * this means we can use the LEDs to graph nicely
-    * @param value describe value here eg: 216
-    * @param target describe target here eg: 10000
-    */
-
-    //% block "map your $value out of $target to a number out of 25"
-    export function mapTo25(value: number, target: number): number {
-        return integerMap(value, 0, target, 0, 25) - 1
-    }
-
-    /**
-    * graphs 'number' out of 'target' on the LED screen
-    * @param value describe value here, eg: 5, 9, 3
-    * @param target describe target here, eg, 100
-    */
-    //% block="screenGraph $value out of $target"
-    //% value.min=0
-    export function graphOnScreen(value: number, target: number): void {
-        if (value > target) {
-            value = target
-        }
-        let screenValue = mapTo25(value, target)
-        if (screenValue == 0) {
-            basic.clearScreen()
-        } else {
-            basic.clearScreen()
-            basic.pause(500)
-            for (let index = 0; index <= screenValue; index++) {
-                led.plot(0, (index / 5))
-            }
-        }
-    }
-}
-
-//% weight=58 color=#444A84 icon="\uf118" block="DOT Pulse Calculation"
-//% groups=['1: basics', '2: behind the scenes', '3: test functions']
-namespace calculation {
-    let activityPoints: number = 0
-    let activityTarget: number = 100
-    let moderatePulseLowBound: number = 0
-    let moderateVigorousBoundary: number = 0
-    let vigorousPulseHighBound: number = 0
-    let maximumPulse: number = 0
-    let heartRateReserve: number = 0
-    let totalActivityPoints: number = 0
-    let tempVar: number = 0
-
-    /**
-     * @param age eg:12
-     * @param restRate eg:70
-     */
-    //% block="calculate target zone using age:$age and resting Heart Rate: $restRate"
-    //% group='1: basics'
-    export function calcModVig(age: number, restRate: number) {
-        maximumPulse = 220 - age
-        heartRateReserve = maximumPulse - restRate
-        moderatePulseLowBound = (heartRateReserve / 2) + restRate
-        moderateVigorousBoundary = Math.round((heartRateReserve * .7) + restRate)
-        vigorousPulseHighBound = Math.round((heartRateReserve * .85) + restRate)
-    }
-
-
-
-    /**
-     * how much activity you should be doing this week
-     */
-    //% block="activity target"
-    //% group='1: basics'
-    export function getActivityTarget() {
-        return activityTarget
-    }
-
-    /**
-     * how much activity you have done since you turned on the micro:bit
-     */
-    //% block='activity points'
-    //% group='1: basics'
-    export function getActivityPoints() {
-        return totalActivityPoints / 30       // We use 30 because we have a 2-second sample period.
-    }
-
-    /**
-     * 
-     */
-    //% block="calculate activity points"
-    //% group='1: basics'
-    export function calcActivityPoints() {
-        if (checkPulseLevel() == 4) {
-            totalActivityPoints += 4
-        } else if (checkPulseLevel() == 2) {
-            totalActivityPoints += 2
-        }
-    }
-
-
-
-    //% block='set activity target to $value'
-    //% group='2: behind the scenes'
-    export function setActivityTarget(value: number) {
-        activityTarget = value
-    }
-
-    //% block='moderate pulse lower bound'
-    //% group='2: behind the scenes'
-    export function getMPLB() {
-        return moderatePulseLowBound
-    }
-
-    //% block='moderate-vigorous boundary'
-    //%group='2: behind the scenes'
-    export function getMVB() {
-        return moderateVigorousBoundary
-    }
-
-    //% block='vigorous pulse high bound'
-    //% group='2: behind the scenes'
-    export function getVPHB() {
-        return vigorousPulseHighBound
-    }
-
-    //% block='maximum pulse rate'
-    //% group='2: behind the scenes'
-    export function getMPR() {
-        return maximumPulse
-    }
-
-    //% block='heart rate reserve'
-    //% group='2: behind the scenes'
-    export function getHRR() {
-        return heartRateReserve
-    }
-
-    /**
-         * how much activity you have done since you turned on the micro:bit
-         */
-    //% block='total activity points'
-    //% group='3: test functions'
-    export function getTotalActivityPoints() {
-        return totalActivityPoints
-    }
-
-    /**
-     * returns a 1 for light, 2 for moderate and a 4 for vigorous exercise.  -1 means there is an error
-     */
-    //% block='check pulse level'
-    //% group='2: behind the scenes'
-    export function checkPulseLevel(): number {
-        // requires enough pulse values in pulse.whatever to use for a historical average.
-        // returns a -1, 1, 2 or 4.
-        let samples: number[] = amped.getBPMSamples()
-        let n: number = 0
-        let m: number = samples.length
-
-        for (let i: number = 0; i < samples.length; i++) {
-            n += samples[i]
-        }
-        n = Math.round(n / m)
-        tempVar = n
-        if (n <= vigorousPulseHighBound && n > moderateVigorousBoundary) {       // high
-            tempVar = 40
-            return 4
-        }
-        else if (n <= moderateVigorousBoundary && n > moderatePulseLowBound) {     // moderate
-            tempVar = 20
-            return 2
-        }
-        else if (n <= moderatePulseLowBound) {        // light
-            return 1
-        }
-        else return -1                          // We're too high, so error out
-    }
-
-    //% block='get tempVar, a test variable'
-    //% group='3: test functions'
-    export function getTempVar() {
-        return tempVar
-    }
-
-    //% block='set activity points to $value'
-    //% group='3: test functions'
-    export function setActivityPoints(value: number) {
-        activityPoints = value
-    }
-
-    //% block='set moderate lower bound to $value'
-    //% group='3: test functions'
-    export function setLowerBound(value: number) {
-        moderatePulseLowBound = value
-    }
-
-    //% block='set moderate-vigorous boundary to $value'
-    //% group='3: test functions'
-    export function setMidBoundary(value: number) {
-        moderateVigorousBoundary = value
-    }
-}
-
-//% weight=60 color=#444A84 icon="\uf051" block="DOT Pulse"
-//% groups=['1: basics', '2: behind the scenes']
-namespace amped {
+namespace dotPulse {
 
     let sampleIntervalMS = 20
 
     let rate: number[] = []
     let values: number[] = []
-    let lastBPMSamples: number[] = []     // EXPECTED BY calculation.checkPulseLevel()
+    let lastBPMSamples: number[] = []       // EXPECTED BY calculation.checkPulseLevel()
+
+    let sampleLengthMS: number = 2000       // 2 seconds is the norm, but should not be relied on.
+    let BPMLength = sampleLengthMS / sampleIntervalMS           // !! not what we'll eventually use, but workable for the moment
+    let rateLength = sampleLengthMS / sampleIntervalMS
+
 
     function initialSeeding() {
         // 2 seconds of data required
-        let samples: number = 2000 / sampleIntervalMS
+        let samples: number = sampleLengthMS / sampleIntervalMS
         for (let i: number = 0; i < samples; i++) {
             rate.push(0)
             values.push(0)
-            lastBPMSamples.push(70)
+            lastBPMSamples.push(0)
         }
     }
 
     initialSeeding()
 
+
+    // amped pulse calculation
     let inputPin: AnalogPin = AnalogPin.P0
     let QS: boolean = false
     let BPM = 1
@@ -245,7 +45,7 @@ namespace amped {
     let Trough: number = 512
     let threshSetting: number = 0
     let thresh: number = threshSetting
-    let sensitivity: number = 90                          // Skin opacity and blood vessel layout matter
+    let triggerLevel: number = 90                          // Skin opacity and blood vessel layout matter
     let amp = 100 // amplitude is 1/10thish of input range.  May alter for 3.3V
     let firstBeat = true  // looking for the first beat
     let secondBeat = false // not yet looking for the second beat in a row
@@ -256,47 +56,94 @@ namespace amped {
     let lastTotal: number = 0                           // }
 
 
-    export function getBPMSamples() {
+
+    function getBPMSamples() {
         return lastBPMSamples
     }
 
+    /**
+    * 
+    */
+    //% block="process pulse"
+    export function processPulse() {
+        for (let i = 0; i < getSampleLength() / getSampleInterval(); i++) {
+            readNextSample()
+            processLatestSample()
+            basic.pause(getSampleInterval())
+        }
+    }
+
     //% block="set input pin to $pin"
-    //% group='1: basics'
     export function setPinNumber(pin: AnalogPin) {
         inputPin = pin
     }
 
-    //% block
-    //% group='2: behind the scenes'
+    /**
+     * @param value eg: 5 
+     */
+    //% block="view pulse on LEDs for $value seconds"
+    //% value.min=1
+    export function viewPulseFor(value: number) {
+        for (let i = 0; i < value*10; i++) {
+            led.plotBarGraph(getLatestSample(), 1023)
+            basic.pause(100)
+        }
+        basic.clearScreen()
+    }
+
+    //% block="sample interval (ms)"
+    //% advanced=true
     export function getSampleInterval() {
         return sampleIntervalMS
     }
 
-    function getSensitivity() {
-        return sensitivity
+    /**
+     * sample length in MS
+     */
+    //% block="sample length (ms)"
+    //% advanced=true
+    export function getSampleLength() {
+        return sampleLengthMS
+    }
+
+    /**
+     * a measure of sensitivity when looking at the pulse
+     */
+    //% block="trigger level"
+    //% advanced=true
+    export function getTriggerLevel() {
+        return triggerLevel
+    }
+
+    /**
+    * a measure of sensitivity when looking at the pulse
+    */
+    //% block="set trigger level to $value"
+    //% advanced=true
+    export function setTriggerLevel(value: number) {
+        triggerLevel = value
     }
 
     //% block
-    //% group='2: behind the scenes'
+    //% advanced=true
     export function setSampleInterval(value: number) {
         sampleIntervalMS = value
     }
 
-    function mapPinToSample(value: number) {
-        return pins.map(value, 500, 1023, 0, 1023)
-    }
+    // function mapPinToSample(value: number) {         // required if we offset values for easier calculation
+    //     return pins.map(value, 500, 1023, 0, 1023)
+    // }
 
     /**
      * gets Beats Per Minute, which we calculate as we go along
      */
     //% block="BPM"
-    //% group='1: basics'
     export function getBPM() {
         return BPM
     }
 
     //% block="current value"
-    //% group='2: behind the scenes'
+    //% advanced=true
     export function getLatestSample() {   // We're currently sampling from the end for no reason I can really recall...
         return values[values.length - 2]
     }
@@ -304,20 +151,23 @@ namespace amped {
     /**
      * get amplitude of signal (how big from highest to lowest)
      */
-    //% block="amp"
-    //% group='2: behind the scenes'
+    //% block="amplitude"
+    //% advanced=true
+    //% 6
     export function getAmp() {
         return amp
     }
 
+
     /**
     * show Inter-Beat Interval
     */
-    //% block="IBI"
-    //% group='2: behind the scenes'
+    //% block="Inter-Beat Interval"
+    //% advanced=true
     export function getIBI() {
         return IBI
     }
+
 
     function getLastBeatTime() {
         return lastBeatTime
@@ -327,6 +177,7 @@ namespace amped {
     function isInsideBeat() {
         return pulse
     }
+
 
     function triangleSmooth(array: number[], weighting: number): number {
         if (array.length == 0) { return 0 }
@@ -350,11 +201,11 @@ namespace amped {
      * takes a reading from the pin connected to the pulse meter
      */
     //% block="read (and save) pulse value"
-    //% group='1: basics'
+    //% advanced=true
     export function readNextSample() {
         // assume that reading is atomic, perfect, complete, and does not get in the way of other things
         moveThresh(values.shift())
-        let value: number = Math.round(pins.analogReadPin(inputPin))   // !! magic number - 500 is the usual floating voltage, and offsetting here stops overflow spikes in thresh calculation
+        let value: number = Math.round(pins.analogReadPin(inputPin))
         moveThresh(value)
         values.push(value)
         signal = value
@@ -436,7 +287,7 @@ namespace amped {
      * finds if we are in a pulse already, or have just started one
      */
     //% block="process current pulse value"
-    //% group='1: basics'
+    //% advanced=true
     export function processLatestSample() {
         let N: number = input.runningTime() - lastBeatTime          // N is a time interval
         calculateRunningTotal()                                     // also updates last total
@@ -451,7 +302,7 @@ namespace amped {
                 rising = true
             }
 
-            if ((pulse == false) && (N > (IBI / 5) * 3) && rising == true && amp > 100) {
+            if ((pulse == false) && (N > (IBI / 5) * 3) && rising == true && amp > triggerLevel) {
                 newPulse(N)                                  // sets pulse to true, sets IBI to N, moves lastBeatTime to input.runningTime
                 if (secondBeat) {
                     secondBeat = false                      // We are no longer looking for the second beat
@@ -496,8 +347,201 @@ namespace amped {
             BPM = 0
             IBI = 600
             pulse = false
-            amp = 90
+            amp = 100
             calculateRunningTotal()                 // Might as well.  We're not doing anything else.
         }
     }
+
+    export function integerMap(value: number, inputLow: number, inputHigh: number, outputLow: number, outputHigh: number): number {
+        return (value - inputLow) * (outputHigh - outputLow) / (inputHigh - inputLow) + outputLow
+    }
+
+    /**
+    * helper function for mapping calculation brings any number to 25
+    * this means we can use the LEDs to graph nicely
+    * @param value describe value here eg: 21
+    * @param target describe target here eg: 100
+    */
+
+    export function mapTo25(value: number, target: number): number {
+        return integerMap(value, 0, target, 0, 25) - 1
+    }
+
+    let activityPoints: number = 0
+    let activityTarget: number = 100
+    let moderatePulseLowBound: number = 0
+    let moderateVigorousBoundary: number = 0
+    let vigorousPulseHighBound: number = 0
+    let maximumPulse: number = 0
+    let heartRateReserve: number = 0
+    let totalActivityPoints: number = 0
+    //    let tempVar: number = 0                                           // only used for serial testing, to pull out numbers cleanly
+
+    /**
+     * @param age eg:12
+     * @param restRate eg:70
+     */
+    //% block="calculate target zone using age:$age and resting Heart Rate: $restRate"
+
+    export function calcModVig(age: number, restRate: number) {
+        maximumPulse = 220 - age
+        heartRateReserve = maximumPulse - restRate
+        moderatePulseLowBound = (heartRateReserve / 2) + restRate
+        moderateVigorousBoundary = Math.round((heartRateReserve * .7) + restRate)
+        vigorousPulseHighBound = Math.round((heartRateReserve * .85) + restRate)
+        
+    }
+
+
+    /**
+     * how much activity you have done since you turned on the micro:bit
+     */
+    //% block='activity points'
+    //% blockGap=6
+    export function getActivityPoints() {
+        return Math.round(totalActivityPoints / 30)       // We use 30 because we have a 2-second sample period.
+    }
+
+    /**
+     * activity target, in minutes of vigorous exercise
+     * moderate exercise will count for half
+     */
+    //% block="activity target"
+    //% blockGap=6
+    export function getActivityTarget() {
+        return activityTarget
+    }
+
+    /**
+     * checks the most recent BPM calculation for what sort of exercise it implies
+     */
+    //% block="calculate activity points"
+    export function calcActivityPoints() {
+        if (checkPulseLevel() == 4) {
+            totalActivityPoints += 4
+        } else if (checkPulseLevel() == 2) {
+            totalActivityPoints += 2
+        }
+    }
+
+    /**
+    * graphs 'number' out of 'target' on the LED screen
+    * @param value describe value here, eg: 5, 9, 3
+    * @param target describe target here, eg: 100
+    */
+    //% block="track $value out of $target"
+    //% value.min=0
+    export function graphOnScreen(value: number, target: number): void {
+        if (value > target) {
+            value = target
+        }
+        let screenValue = mapTo25(value, target)
+        if (screenValue == 0) {
+            basic.clearScreen()
+        } else {
+            basic.clearScreen()
+            basic.pause(500)
+            for (let index = 0; index <= screenValue; index++) {
+                led.plot(index % 5, Math.round(index / 5))
+            }
+        }
+    }
+
+
+    //% block='set activity target to $value'
+    //% advanced=true
+    export function setActivityTarget(value: number) {
+        activityTarget = value
+    }
+
+    //% block='moderate pulse lower bound'
+    //% advanced=true
+    export function getMPLB() {
+        return moderatePulseLowBound
+    }
+
+    //% block='moderate-vigorous boundary'
+    //% advanced=true
+    export function getMVB() {
+        return moderateVigorousBoundary
+    }
+
+    //% block='vigorous pulse high bound'
+    //% advanced=true
+    export function getVPHB() {
+        return vigorousPulseHighBound
+    }
+
+    //% block='maximum pulse rate'
+    //% advanced=true
+    export function getMPR() {
+        return maximumPulse
+    }
+
+    //% block='heart rate reserve'
+    //% advanced=true
+    export function getHRR() {
+        return heartRateReserve
+    }
+
+    /**
+    * how much activity you have done since you turned on the micro:bit
+    
+    //% block='total activity points'
+    export function getTotalActivityPoints() {
+        return totalActivityPoints
+    }
+    */
+
+    /**
+     * returns a 1 for light, 2 for moderate and a 4 for vigorous exercise.  -1 means there is an error
+     */
+    //% block='current pulse level'
+    //% advanced=true
+    export function checkPulseLevel(): number {
+        // requires enough pulse values in pulse.whatever to use for a historical average.
+        // returns a -1, 1, 2 or 4.
+        let samples: number[] = getBPMSamples()
+        let n: number = 0
+        let m: number = samples.length
+
+        for (let i: number = 0; i < samples.length; i++) {
+            n += samples[i]
+        }
+        n = Math.round(n / m)
+        if (n <= vigorousPulseHighBound && n > moderateVigorousBoundary) {       // high
+            return 4
+        }
+        else if (n <= moderateVigorousBoundary && n > moderatePulseLowBound) {     // moderate
+            return 2
+        }
+        else if (n <= moderatePulseLowBound) {        // light
+            return 1
+        }
+        else return -1                          // We're too high, so error out
+    }
+
+    /**
+     * We only need this for testing.
+    //% block='get tempVar, a test variable'
+    export function getTempVar() {
+        return tempVar
+    } */
+
+    //% block='set activity points to $value'
+    export function setActivityPoints(value: number) {
+        totalActivityPoints = (value * 30)
+    }
+
+    /** //% block='set moderate lower bound to $value'
+    export function setLowerBound(value: number) {
+        moderatePulseLowBound = value
+    }
+
+    //% block='set moderate-vigorous boundary to $value'
+    export function setMidBoundary(value: number) {
+        moderateVigorousBoundary = value
+    }
+    */
+
 }
