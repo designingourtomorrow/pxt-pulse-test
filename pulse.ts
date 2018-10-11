@@ -1,7 +1,5 @@
 /**
- * This code is created for the Pulse Sensor Amped open platform
- * and the BPM calculator is based on the code kindly made available by
- * World Famous Electronics, creators of the Pulse Sensor Amped
+ * This code is created for the Pulse Sensor Amped open platform and based on the code they kindly made available
  */
 
 /**
@@ -62,11 +60,27 @@ namespace dotPulse {
     function getBPMSamples() {
         return lastBPMSamples
     }
+    
+    /**
+    * view pulse on LEDs to check you are reading it right
+    * @param value eg: 5 
+    */  
+    //% block="view pulse on LEDs for $value seconds"
+    //% value.min=1
+    //% blockGap=6
+    export function viewPulseFor(value: number) {
+        for (let i = 0; i < value * 10; i++) {
+            led.plotBarGraph(getLatestSample(), 1023)
+            basic.pause(100)
+        }
+        basic.clearScreen()
+    }
 
     /**
-    * 
+    * process your pulse and record it on the micro:bit
     */
     //% block="process pulse"
+    //% blockGap=14
     export function processPulse() {
         for (let i = 0; i < getSampleLength() / getSampleInterval(); i++) {
             readNextSample()
@@ -75,38 +89,6 @@ namespace dotPulse {
         }
     }
 
-    //% block="set input pin to $pin"
-    export function setPinNumber(pin: AnalogPin) {
-        inputPin = pin
-    }
-
-    /**
-     * @param value eg: 5 
-     */
-    //% block="view pulse on LEDs for $value seconds"
-    //% value.min=1
-    export function viewPulseFor(value: number) {
-        for (let i = 0; i < value*10; i++) {
-            led.plotBarGraph(getLatestSample(), 1023)
-            basic.pause(100)
-        }
-        basic.clearScreen()
-    }
-
-    //% block="sample interval (ms)"
-    //% advanced=true
-    export function getSampleInterval() {
-        return sampleIntervalMS
-    }
-
-    /**
-     * sample length in MS
-     */
-    //% block="sample length (ms)"
-    //% advanced=true
-    export function getSampleLength() {
-        return sampleLengthMS
-    }
 
     /**
      * a measure of sensitivity when looking at the pulse
@@ -140,6 +122,7 @@ namespace dotPulse {
      * gets Beats Per Minute, which we calculate as we go along
      */
     //% block="BPM"
+    //% advanced=true
     export function getBPM() {
         return BPM
     }
@@ -159,7 +142,6 @@ namespace dotPulse {
     export function getAmp() {
         return amp
     }
-
 
     /**
     * show Inter-Beat Interval
@@ -198,6 +180,29 @@ namespace dotPulse {
             total += array[i] * (weighting) * (array.length - i)
         return total / array.length * weighting
     }
+
+    //% block="set input pin to $pin"
+    //% blockGap=6
+    //% advanced=true
+    export function setPinNumber(pin: AnalogPin) {
+        inputPin = pin
+    }
+
+    //% block="sample interval (ms)"
+    //% advanced=true
+    export function getSampleInterval() {
+        return sampleIntervalMS
+    }
+
+    /**
+     * sample length in MS
+     */
+    //% block="sample length (ms)"
+    //% advanced=true
+    export function getSampleLength() {
+        return sampleLengthMS
+    }
+
 
     /**
      * takes a reading from the pin connected to the pulse meter
@@ -394,6 +399,18 @@ namespace dotPulse {
         
     }
 
+    /**
+     * checks the most recent BPM calculation for what sort of exercise it implies
+     */
+    //% block="calculate activity points"
+    //% blockGap=6
+    export function calcActivityPoints() {
+        if (checkPulseLevel() == 4) {
+            totalActivityPoints += 4
+        } else if (checkPulseLevel() == 2) {
+            totalActivityPoints += 2
+        }
+    }
 
     /**
      * how much activity you have done since you turned on the micro:bit
@@ -409,22 +426,12 @@ namespace dotPulse {
      * moderate exercise will count for half
      */
     //% block="activity target"
-    //% blockGap=6
+    //% blockGap=14
     export function getActivityTarget() {
         return activityTarget
     }
 
-    /**
-     * checks the most recent BPM calculation for what sort of exercise it implies
-     */
-    //% block="calculate activity points"
-    export function calcActivityPoints() {
-        if (checkPulseLevel() == 4) {
-            totalActivityPoints += 4
-        } else if (checkPulseLevel() == 2) {
-            totalActivityPoints += 2
-        }
-    }
+
 
     /**
     * graphs 'number' out of 'target' on the LED screen
