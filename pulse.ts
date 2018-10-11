@@ -60,11 +60,11 @@ namespace dotPulse {
     function getBPMSamples() {
         return lastBPMSamples
     }
-    
+
     /**
     * view pulse on LEDs to check you are reading it right
     * @param value eg: 5 
-    */  
+    */
     //% block="view pulse on LEDs for $value seconds"
     //% value.min=1
     //% blockGap=6
@@ -360,7 +360,7 @@ namespace dotPulse {
     }
 
     export function integerMap(value: number, inputLow: number, inputHigh: number, outputLow: number, outputHigh: number): number {
-        return (value - inputLow) * (outputHigh - outputLow) / (inputHigh - inputLow) + outputLow
+        return Math.round((value - inputLow) * (outputHigh - outputLow) / (inputHigh - inputLow) + outputLow)
     }
 
     /**
@@ -382,7 +382,7 @@ namespace dotPulse {
     let maximumPulse: number = 0
     let heartRateReserve: number = 0
     let totalActivityPoints: number = 0
-    //    let tempVar: number = 0                                           // only used for serial testing, to pull out numbers cleanly
+    let tempVar: number = 0                                           // only used for serial testing, to pull out numbers cleanly
 
     /**
      * @param age eg:12
@@ -396,7 +396,7 @@ namespace dotPulse {
         moderatePulseLowBound = (heartRateReserve / 2) + restRate
         moderateVigorousBoundary = Math.round((heartRateReserve * .7) + restRate)
         vigorousPulseHighBound = Math.round((heartRateReserve * .85) + restRate)
-        
+
     }
 
     /**
@@ -448,10 +448,11 @@ namespace dotPulse {
         if (screenValue == 0) {
             basic.clearScreen()
         } else {
+            tempVar = screenValue
             basic.clearScreen()
             basic.pause(500)
             for (let index = 0; index <= screenValue; index++) {
-                led.plot(index % 5, Math.round(index / 5))
+                led.plot(index % 5, index / 5)
             }
         }
     }
@@ -532,10 +533,11 @@ namespace dotPulse {
 
     /**
      * We only need this for testing.
+    */
     //% block='get tempVar, a test variable'
     export function getTempVar() {
         return tempVar
-    } */
+    }
 
     //% block='set activity points to $value'
     export function setActivityPoints(value: number) {
