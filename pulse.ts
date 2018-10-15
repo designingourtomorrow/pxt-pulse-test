@@ -461,7 +461,7 @@ namespace dotPulse {
             basic.clearScreen()
             basic.pause(500)
             for (let index = 0; index <= screenValue; index++) {
-                led.plot(index % 5, index / 5)
+                led.plot(index % 5, 4 - (Math.floor(index / 5)))
             }
         }
     }
