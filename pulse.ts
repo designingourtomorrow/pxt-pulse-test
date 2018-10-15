@@ -7,7 +7,7 @@ sampleLengthMS
  * Custom blocks
  */
 
-//% weight=58 color=#EBEBFF icon="\uf118" block="DOT Pulse"
+//% weight=58 color=#00004c icon="\uf118" block="DOT Pulse"
 
 namespace dotPulse {
 
