@@ -1,4 +1,5 @@
 /**
+sampleLengthMS
  * This code is created for the Pulse Sensor Amped open platform and based on the code they kindly made available
  */
 
@@ -6,7 +7,7 @@
  * Custom blocks
  */
 
-//% weight=58 color=#444A84 icon="\uf118" block="DOT Pulse"
+//% weight=58 color=#EBEBFF icon="\uf118" block="DOT Pulse"
 
 namespace dotPulse {
 
@@ -89,14 +90,10 @@ namespace dotPulse {
         }
     }
 
-
-    /**
-     * a measure of sensitivity when looking at the pulse
-     */
-    //% block="trigger level"
+    //% block="set input pin to $pin"
     //% advanced=true
-    export function getTriggerLevel() {
-        return triggerLevel
+    export function setPinNumber(pin: AnalogPin) {
+        inputPin = pin
     }
 
     /**
@@ -119,16 +116,29 @@ namespace dotPulse {
     // }
 
     /**
+       * a measure of sensitivity when looking at the pulse
+       */
+    //% block="trigger level"
+    //% advanced=true
+    //% blockGap=6
+    export function getTriggerLevel() {
+        return triggerLevel
+    }
+
+
+    /**
      * gets Beats Per Minute, which we calculate as we go along
      */
     //% block="BPM"
     //% advanced=true
+    //% blockGap=6
     export function getBPM() {
         return BPM
     }
 
     //% block="current value"
     //% advanced=true
+    //% blockGap=6
     export function getLatestSample() {   // We're currently sampling from the end for no reason I can really recall...
         return values[values.length - 2]
     }
@@ -138,7 +148,7 @@ namespace dotPulse {
      */
     //% block="amplitude"
     //% advanced=true
-    //% 6
+    //% blockGap=6
     export function getAmp() {
         return amp
     }
@@ -148,6 +158,7 @@ namespace dotPulse {
     */
     //% block="Inter-Beat Interval"
     //% advanced=true
+    //% blockGap=6
     export function getIBI() {
         return IBI
     }
@@ -181,15 +192,10 @@ namespace dotPulse {
         return total / array.length * weighting
     }
 
-    //% block="set input pin to $pin"
-    //% blockGap=6
-    //% advanced=true
-    export function setPinNumber(pin: AnalogPin) {
-        inputPin = pin
-    }
 
     //% block="sample interval (ms)"
     //% advanced=true
+    //% blockGap=6
     export function getSampleInterval() {
         return sampleIntervalMS
     }
@@ -199,6 +205,7 @@ namespace dotPulse {
      */
     //% block="sample length (ms)"
     //% advanced=true
+    //% blockGap=8
     export function getSampleLength() {
         return sampleLengthMS
     }
@@ -209,6 +216,7 @@ namespace dotPulse {
      */
     //% block="read (and save) pulse value"
     //% advanced=true
+    //% blockGap=6
     export function readNextSample() {
         // assume that reading is atomic, perfect, complete, and does not get in the way of other things
         moveThresh(values.shift())
@@ -277,7 +285,7 @@ namespace dotPulse {
         rate[9] = IBI
         rateTotal += rate[9]
         rateTotal /= 10                                 // this gives us an average, so we avoid spikes
-        BPM = Math.round(60000 / rateTotal)             // 60,000ms = 60secs
+        BPM = Math.round(60000 / rateTotal)             // 60,000ms=60secs
         lastBPMSamples.push(BPM)
         lastBPMSamples.shift()
         QS = true                                       // Quantified Self (detected a beat!)
@@ -295,6 +303,7 @@ namespace dotPulse {
      */
     //% block="process current pulse value"
     //% advanced=true
+    //% blockGap=8
     export function processLatestSample() {
         let N: number = input.runningTime() - lastBeatTime          // N is a time interval
         calculateRunningTotal()                                     // also updates last total
@@ -460,36 +469,42 @@ namespace dotPulse {
 
     //% block='set activity target to $value'
     //% advanced=true
+    //% blockGap=4
     export function setActivityTarget(value: number) {
         activityTarget = value
     }
 
     //% block='moderate pulse lower bound'
     //% advanced=true
+    //% blockGap=4
     export function getMPLB() {
         return moderatePulseLowBound
     }
 
     //% block='moderate-vigorous boundary'
     //% advanced=true
+    //% blockGap=4
     export function getMVB() {
         return moderateVigorousBoundary
     }
 
     //% block='vigorous pulse high bound'
     //% advanced=true
+    //% blockGap=4
     export function getVPHB() {
         return vigorousPulseHighBound
     }
 
     //% block='maximum pulse rate'
     //% advanced=true
+    //% blockGap=4
     export function getMPR() {
         return maximumPulse
     }
 
     //% block='heart rate reserve'
     //% advanced=true
+    //% blockGap=6
     export function getHRR() {
         return heartRateReserve
     }
@@ -546,12 +561,12 @@ namespace dotPulse {
 
     /** //% block='set moderate lower bound to $value'
     export function setLowerBound(value: number) {
-        moderatePulseLowBound = value
+        moderatePulseLowBound=value
     }
 
     //% block='set moderate-vigorous boundary to $value'
     export function setMidBoundary(value: number) {
-        moderateVigorousBoundary = value
+        moderateVigorousBoundary=value
     }
     */
 
