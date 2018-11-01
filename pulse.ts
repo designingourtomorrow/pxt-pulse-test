@@ -244,6 +244,7 @@ namespace dotPulse {
     export function readNextSample() {
         // assume that reading is atomic, perfect, complete, and does not get in the way of other things
         sampleArray.push(pins.analogReadPin(inputPin))
+        sampleArray.shift()
     }
 
     function newPulse() {
