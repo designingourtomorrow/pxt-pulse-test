@@ -71,11 +71,21 @@ namespace dotPulse {
     //% value.min=1
     //% blockGap=6
     export function viewPulseFor(value: number) {
-        for (let i = 0; i < value * 10; i++) {
-            led.plotBarGraph(getSmoothedSample(), 1023)
+        let time = input.runningTime()
+        while (input.runningTime() <= time + 1000 * value) {
+            led.plotBarGraph(
+                pins.analogReadPin(AnalogPin.P0),
+                1023
+            )
             basic.pause(100)
         }
-        basic.clearScreen()
+        basic.showLeds(`
+        . . # . .
+        . # # . .
+        # # # . #
+        . . # # .
+        . . # . .
+        `)
     }
 
     /**
@@ -501,8 +511,7 @@ namespace dotPulse {
         }
         else return -1                          // We're too high, so error out
     }
-
-    /**
+  /**
      * use this to start at a number that is not 0
      * @param eg: 20
      */
