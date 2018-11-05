@@ -8,6 +8,7 @@ sampleLengthMS
  */
 
 //% weight=58 color=#00004c icon="\uf118" block="DOT Pulse"
+//% groups=['1: Basic Blocks', '2: Advanced', '3: Useful Numbers']
 
 namespace dotPulse {
 
@@ -28,10 +29,12 @@ namespace dotPulse {
         // 2 seconds of data required
         let samples: number = sampleLengthMS / sampleIntervalMS
         for (let i: number = 0; i < samples; i++) {
-            rate.push(0)
             sampleArray.push(0)
             smoothedValues.push(0)
             lastBPMSamples.push(0)
+        }
+        for (let i: number = 0; i < 10; i++) {
+            rate.push(0)
         }
     }
 
@@ -39,7 +42,6 @@ namespace dotPulse {
 
     // amped pulse calculation
     let inputPin: AnalogPin = AnalogPin.P0
-    let QS: boolean = false
     let BPM = 0
     let IBI = 600                                           // InterBeat Interval, ms
     let pulse = false
@@ -47,7 +49,7 @@ namespace dotPulse {
     let Peak: number = 0
     let Trough: number = 1023
     let averageSignal = 0
-    let triggerOffset: number = 50                          // stays up above average this way.
+    let triggerOffset: number = 90                          // stays up above average this way.
     let firstBeat = true  // looking for the first beat
     let secondBeat = false // not yet looking for the second beat in a row
     let signal: number = 0
@@ -67,6 +69,7 @@ namespace dotPulse {
     //% block="view pulse on LEDs for $value seconds"
     //% value.min=1 value.max=15
     //% blockGap=6
+    //% group='1: Basic Blocks'
     export function viewPulseFor(value: number) {
         let time = input.runningTime()
         while (input.runningTime() <= time + 1000 * value) {
@@ -89,6 +92,7 @@ namespace dotPulse {
     */
     //% block="process pulse"
     //% blockGap=14
+    //% group='1: Basic Blocks'
     export function processPulse() {
         for (let i = 0; i < getSampleLength() / getSampleInterval(); i++) {
             readNextSample()
@@ -126,8 +130,31 @@ namespace dotPulse {
 
     //% block="set input pin to $pin"
     //% advanced=true
+    //% group='1: Basic Blocks'
     export function setPinNumber(pin: AnalogPin) {
         inputPin = pin
+    }
+
+
+    /**
+     * set your target for time spent in high or moderate activity
+     * @param value eg: 100
+     */
+    //% block='set activity target to $value'
+    //% blockGap=6
+    //% group='1: Basic Blocks'
+    export function setActivityTarget(value: number) {
+        activityTarget = value
+    }
+
+    /**
+     * use this to start at a number that is not 0
+     * @param value eg: 20
+     */
+    //% block='set activity points to $value'
+    //% group='2: Advanced'
+    export function setActivityPoints(value: number) {
+        totalActivityPoints = (value * 30)
     }
 
     /**
@@ -244,7 +271,7 @@ namespace dotPulse {
     /**
      * takes a reading from the pin connected to the pulse meter
      */
-    //% block="read (and save) pulse value"
+    //% block="take pulse sample"
     //% advanced=true
     //% blockGap=6
     export function readNextSample() {
@@ -290,6 +317,7 @@ namespace dotPulse {
      */
     //% block="process latest sample"
     //% blockGap=8
+    //% group='2: Advanced'
     export function processLatestSample() {
 
         smoothSample()  // now we work on smoothedValues instead of the noisy samples
@@ -369,6 +397,8 @@ namespace dotPulse {
      */
     //% block="calculate activity points"
     //% blockGap=6
+
+    //% group='1: Basic Blocks'
     export function calcActivityPoints() {
         if (checkPulseLevel() == 4) {
             totalActivityPoints += 4
@@ -423,17 +453,6 @@ namespace dotPulse {
     }
 
 
-    /**
-     * set your target for time spent in high or moderate activity
-     * @param value eg: 100
-     */
-    //% block='set activity target to $value'
-    //% advanced=true
-    //% blockGap=4
-    export function setActivityTarget(value: number) {
-        activityTarget = value
-    }
-
     function getMPLB() {
         return moderatePulseLowBound
     }
@@ -480,24 +499,6 @@ namespace dotPulse {
             return 1
         }
         else return -1                          // We're too high, so error out
-    }
-
-    /**
-     * We only need this for testing.
-    */
-    //% block='get tempVar, a test variable'
-    //export function getTempVar() {
-    //    return tempVar
-    //}
-
-
-    /**
-     * use this to start at a number that is not 0
-     * @param value eg: 20
-     */
-    //% block='set activity points to $value'
-    export function setActivityPoints(value: number) {
-        totalActivityPoints = (value * 30)
     }
 
 
