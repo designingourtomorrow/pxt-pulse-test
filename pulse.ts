@@ -19,7 +19,7 @@ namespace dotPulse {
     let lastBPMSamples: number[] = []       // EXPECTED BY checkPulseLevel()
 
     let sampleLengthMS: number = 2000                           // 2 seconds is the norm, but should not be relied on.
-    let BPMLength = sampleLengthMS / sampleIntervalMS          
+    let BPMLength = sampleLengthMS / sampleIntervalMS
     let rateLength = sampleLengthMS / sampleIntervalMS
     let smoothingCoefficient: number = 3                        // how many samples do we use to work out 'average'?
 
@@ -36,7 +36,6 @@ namespace dotPulse {
     }
 
     initialSeeding()
-
 
     // amped pulse calculation
     let inputPin: AnalogPin = AnalogPin.P0
@@ -57,18 +56,16 @@ namespace dotPulse {
     let runningTotal: number = 0                        // } We use these to track if we are rising or falling
     let lastTotal: number = 0                           // }
 
-
-
     function getBPMSamples() {
         return lastBPMSamples
     }
 
     /**
-    * view pulse on LEDs to check you are reading it right
+    * view pulse on LEDs as it happens
     * @param value eg: 5 
     */
     //% block="view pulse on LEDs for $value seconds"
-    //% value.min=1
+    //% value.min=1 value.max=15
     //% blockGap=6
     export function viewPulseFor(value: number) {
         let time = input.runningTime()
@@ -87,7 +84,6 @@ namespace dotPulse {
         . . # . .
         `)
     }
-
     /**
     * process your pulse and record it on the micro:bit
     */
@@ -281,7 +277,6 @@ namespace dotPulse {
         return smoothedValues[smoothedValues.length - 1]
     }
 
-
     function isValidBeatTime(): boolean {
         if (lastBeatTime + 250 < input.runningTime()) {  // If your heart is beating more than 4 times a second, you have a different problem
             return true
@@ -293,8 +288,7 @@ namespace dotPulse {
     /**
      * finds if we are in a pulse already, or have just started one
      */
-    //% block="process current pulse value"
-    //% advanced=true
+    //% block="process latest sample"
     //% blockGap=8
     export function processLatestSample() {
 
@@ -384,7 +378,7 @@ namespace dotPulse {
     }
 
     /**
-     * how much activity you have done since you turned on the micro:bit
+     * activity in minutes of moderate or half minutes of vigorous exercise
      */
     //% block='activity points'
     //% blockGap=6
@@ -406,7 +400,7 @@ namespace dotPulse {
 
     /**
     * graphs 'number' out of 'target' on the LED screen
-    * @param value describe value here, eg: 5, 9, 3
+    * @param value describe value here, eg: 5
     * @param target describe target here, eg: 100
     */
     //% block="track $value out of $target"
@@ -440,56 +434,32 @@ namespace dotPulse {
         activityTarget = value
     }
 
-    //% block='moderate pulse lower bound'
-    //% advanced=true
-    //% blockGap=4
-    export function getMPLB() {
+    function getMPLB() {
         return moderatePulseLowBound
     }
 
-    //% block='moderate-vigorous boundary'
-    //% advanced=true
-    //% blockGap=4
-    export function getMVB() {
+    function getMVB() {
         return moderateVigorousBoundary
     }
 
-    //% block='vigorous pulse high bound'
-    //% advanced=true
-    //% blockGap=4
-    export function getVPHB() {
+    function getVPHB() {
         return vigorousPulseHighBound
     }
 
-    //% block='maximum pulse rate'
-    //% advanced=true
-    //% blockGap=4
-    export function getMPR() {
+    function getMPR() {
         return maximumPulse
     }
 
-    //% block='heart rate reserve'
-    //% advanced=true
-    //% blockGap=6
-    export function getHRR() {
+    function getHRR() {
         return heartRateReserve
     }
 
     /**
-    * how much activity you have done since you turned on the micro:bit
-    
-    //% block='total activity points'
-    export function getTotalActivityPoints() {
-        return totalActivityPoints
-    }
-    */
-
-    /**
      * returns a 1 for light, 2 for moderate and a 4 for vigorous exercise.  -1 means there is an error
      */
-    //% block='current pulse level'
-    //% advanced=true
-    export function checkPulseLevel(): number {
+    // % block='current pulse level'
+    // % advanced=true
+    function checkPulseLevel(): number {
         // requires enough pulse values in pulse.whatever to use for a historical average.
         // returns a -1, 1, 2 or 4.
         let samples: number[] = getBPMSamples()
@@ -511,24 +481,24 @@ namespace dotPulse {
         }
         else return -1                          // We're too high, so error out
     }
-  /**
+
+    /**
+     * We only need this for testing.
+    */
+    //% block='get tempVar, a test variable'
+    //export function getTempVar() {
+    //    return tempVar
+    //}
+
+
+    /**
      * use this to start at a number that is not 0
-     * @param eg: 20
+     * @param value eg: 20
      */
     //% block='set activity points to $value'
     export function setActivityPoints(value: number) {
         totalActivityPoints = (value * 30)
     }
 
-    /** //% block='set moderate lower bound to $value'
-    export function setLowerBound(value: number) {
-        moderatePulseLowBound=value
-    }
-
-    //% block='set moderate-vigorous boundary to $value'
-    export function setMidBoundary(value: number) {
-        moderateVigorousBoundary=value
-    }
-    */
 
 }
