@@ -8,7 +8,7 @@ sampleLengthMS
  */
 
 //% weight=58 color=#00004c icon="\uf118" block="DOT Pulse"
-//% groups=['1: Basic Blocks', '2: Advanced', '3: Useful Numbers']
+//% groups=['1: Core Blocks', '2: Extension Blocks', '3: Useful Variables']
 
 namespace dotPulse {
 
@@ -69,7 +69,7 @@ namespace dotPulse {
     //% block="view pulse on LEDs for $value seconds"
     //% value.min=1 value.max=15
     //% blockGap=6
-    //% group='1: Basic Blocks'
+    //% group='1: Core Blocks'
     export function viewPulseFor(value: number) {
         let time = input.runningTime()
         while (input.runningTime() <= time + 1000 * value) {
@@ -92,7 +92,7 @@ namespace dotPulse {
     */
     //% block="process pulse"
     //% blockGap=14
-    //% group='1: Basic Blocks'
+    //% group='1: Core Blocks'
     export function processPulse() {
         for (let i = 0; i < getSampleLength() / getSampleInterval(); i++) {
             readNextSample()
@@ -130,7 +130,7 @@ namespace dotPulse {
 
     //% block="set input pin to $pin"
     //% advanced=true
-    //% group='1: Basic Blocks'
+    //% group='1: Core Blocks'
     export function setPinNumber(pin: AnalogPin) {
         inputPin = pin
     }
@@ -142,7 +142,7 @@ namespace dotPulse {
      */
     //% block='set activity target to $value'
     //% blockGap=6
-    //% group='1: Basic Blocks'
+    //% group='1: Core Blocks'
     export function setActivityTarget(value: number) {
         activityTarget = value
     }
@@ -152,7 +152,7 @@ namespace dotPulse {
      * @param value eg: 20
      */
     //% block='set activity points to $value'
-    //% group='2: Advanced'
+    //% group='2: Extension Blocks'
     export function setActivityPoints(value: number) {
         totalActivityPoints = (value * 30)
     }
@@ -163,6 +163,7 @@ namespace dotPulse {
     //% block="set sensitivity to $value"
     //% advanced=true
     //% value.min=0 value.max=100
+    //% group='1: Core Blocks'
     export function setTriggerLevel(value: number) {
         triggerOffset = 50 - value // Future Diana: we should use this.  Current Diana has a weird headache.
     }
@@ -184,15 +185,6 @@ namespace dotPulse {
     }
 
 
-    /**
-     * gets Beats Per Minute, which we calculate as we go along
-     */
-    //% block="BPM"
-    //% advanced=true
-    //% blockGap=6
-    export function getBPM() {
-        return BPM
-    }
 
     //% block="current Smoothed value"
     //% advanced=true
@@ -272,8 +264,8 @@ namespace dotPulse {
      * takes a reading from the pin connected to the pulse meter
      */
     //% block="take pulse sample"
-    //% advanced=true
     //% blockGap=6
+    //% group="2: Extension Blocks"
     export function readNextSample() {
         // assume that reading is atomic, perfect, complete, and does not get in the way of other things
         sampleArray.push(pins.analogReadPin(inputPin))
@@ -317,7 +309,7 @@ namespace dotPulse {
      */
     //% block="process latest sample"
     //% blockGap=8
-    //% group='2: Advanced'
+    //% group='2: Extension Blocks'
     export function processLatestSample() {
 
         smoothSample()  // now we work on smoothedValues instead of the noisy samples
@@ -398,7 +390,7 @@ namespace dotPulse {
     //% block="calculate activity points"
     //% blockGap=6
 
-    //% group='1: Basic Blocks'
+    //% group='1: Core Blocks'
     export function calcActivityPoints() {
         if (checkPulseLevel() == 4) {
             totalActivityPoints += 4
@@ -407,11 +399,23 @@ namespace dotPulse {
         }
     }
 
+
+    /**
+     * gets Beats Per Minute, which we calculate as we go along
+     */
+    //% block="BPM"
+    //% blockGap=6
+    //% group='1: Core Blocks'
+    export function getBPM() {
+        return BPM
+    }
+
     /**
      * activity in minutes of moderate or half minutes of vigorous exercise
      */
     //% block='activity points'
     //% blockGap=6
+    //% group="1: Core Blocks"
     export function getActivityPoints() {
         return Math.round(totalActivityPoints / 30)       // We use 30 because we have a 2-second sample period.
     }
@@ -422,6 +426,7 @@ namespace dotPulse {
      */
     //% block="activity target"
     //% blockGap=14
+    //% group="1: Core Blocks"
     export function getActivityTarget() {
         return activityTarget
     }
@@ -500,6 +505,16 @@ namespace dotPulse {
         }
         else return -1                          // We're too high, so error out
     }
+
+    /**
+     * We only need this for testing.
+    */
+    //% block='get tempVar, a test variable'
+    //export function getTempVar() {
+    //    return tempVar
+    //}
+
+
 
 
 }
