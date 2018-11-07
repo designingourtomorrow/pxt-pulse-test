@@ -16,21 +16,18 @@ namespace dotPulse {
 
     let rate: number[] = []
     let sampleArray: number[] = []
-    let smoothedValues: number[] = []
     let lastBPMSamples: number[] = []       // EXPECTED BY checkPulseLevel()
+    let averageFiller: number = 500         // A clean number to fill in average values
 
     let sampleLengthMS: number = 2000                           // 2 seconds is the norm, but should not be relied on.
     let BPMLength = sampleLengthMS / sampleIntervalMS
     let rateLength = sampleLengthMS / sampleIntervalMS
-    let smoothingCoefficient: number = 3                        // how many samples do we use to work out 'average'?
-
 
     function initialSeeding() {
         // 2 seconds of data required
         let samples: number = sampleLengthMS / sampleIntervalMS
         for (let i: number = 0; i < samples; i++) {
-            sampleArray.push(0)
-            smoothedValues.push(0)
+            sampleArray.push(averageFiller)
             lastBPMSamples.push(0)
         }
         for (let i: number = 0; i < 10; i++) {
@@ -45,11 +42,11 @@ namespace dotPulse {
     let BPM = 0
     let IBI = 600                                           // InterBeat Interval, ms
     let pulse = false
-    let lastBeatTime: number = 0
+    let lastBeatTime: number = input.runningTime()
     let Peak: number = 0
     let Trough: number = 1023
-    let averageSignal = 0
-    let triggerOffset: number = 90                          // stays up above average this way.
+    let averageSignal = averageFiller
+    let triggerOffset: number = 20                          // stays up above average this way.
     let firstBeat = true  // looking for the first beat
     let secondBeat = false // not yet looking for the second beat in a row
     let signal: number = 0
@@ -101,32 +98,6 @@ namespace dotPulse {
         }
     }
 
-    export function smoothSample() {
-        if (sampleArray.length < smoothingCoefficient) {
-            smoothingCoefficient = sampleArray.length
-        }
-        let temp: number = 0
-        for (let i = 0; i < smoothingCoefficient; i++) {
-            temp += sampleArray[sampleArray.length - (smoothingCoefficient + 1) - i] * (smoothingCoefficient - i)
-        }
-        let newSample = Math.round(temp / (smoothingCoefficient * smoothingCoefficient))
-        smoothedValues.push(newSample)
-        if (newSample > Peak) {
-            Peak = newSample
-        }
-        if (newSample < Trough) {
-            Trough = newSample
-        }
-        let discard: number = smoothedValues.shift()
-        if (discard <= Trough) {
-            Trough = Math.min(smoothedValues[0], newSample)
-        }
-
-        if (discard >= Peak) {
-            Peak = Math.max(smoothedValues[0], newSample)
-        }
-        averageSignal += Math.round((newSample / smoothedValues.length) - (discard / smoothedValues.length))
-    }
 
     //% block="set input pin to $pin"
     //% advanced=true
@@ -159,13 +130,18 @@ namespace dotPulse {
 
     /**
     * a measure of sensitivity when looking at the pulse
+    * @param value eg: 30
     */
     //% block="set sensitivity to $value"
     //% advanced=true
-    //% value.min=0 value.max=100
+    //% value.min=0 value.max=50
     //% group='1: Core Blocks'
-    export function setTriggerLevel(value: number) {
-        triggerOffset = 50 - value // Future Diana: we should use this.  Current Diana has a weird headache.
+    export function setTriggerOffset(value: number) {
+        triggerOffset = 50 - value
+    }
+
+    function getAverageSignal(): number {
+        return averageSignal
     }
 
     //% block
@@ -182,15 +158,6 @@ namespace dotPulse {
     //% blockGap=6
     export function getTriggerLevel() {
         return triggerOffset + averageSignal
-    }
-
-
-
-    //% block="current Smoothed value"
-    //% advanced=true
-    //% blockGap=6
-    export function getSmoothedSample() {
-        return smoothedValues[smoothedValues.length - 1]
     }
 
     //% block="current value"
@@ -212,35 +179,9 @@ namespace dotPulse {
         return IBI
     }
 
-
     function getLastBeatTime() {
         return lastBeatTime
     }
-
-
-    function isInsideBeat() {
-        return pulse
-    }
-
-
-    function triangleSmooth(array: number[], weighting: number): number {
-        if (array.length == 0) { return 0 }
-        if (weighting == 0) {
-            weighting = 1
-        }
-        if (!(array.length & 1)) {                                          // masking with 1, and finding out if we get a true or false back, to see if we are odd or even.
-            array.pop()
-        }
-        let mid: number = Math.round(array.length / 2 + 0.5)
-        let total: number = 0
-        for (let i: number = 0; i < mid; i++) {
-            total += array[i] * (weighting * i + 1)
-        }
-        for (let i: number = mid; i < array.length; i++)
-            total += array[i] * (weighting) * (array.length - i)
-        return total / array.length * weighting
-    }
-
 
     //% block="sample interval (ms)"
     //% advanced=true
@@ -268,20 +209,28 @@ namespace dotPulse {
     //% group="2: Extension Blocks"
     export function readNextSample() {
         // assume that reading is atomic, perfect, complete, and does not get in the way of other things
-        sampleArray.push(pins.analogReadPin(inputPin))
-        sampleArray.shift()
+
+        let newSample: number = pins.analogReadPin(inputPin)
+        sampleArray.push(newSample)
+        let discard: number = sampleArray.shift()
+        averageSignal += Math.round(newSample / sampleArray.length)
+        averageSignal -= Math.round(discard / sampleArray.length)
     }
 
     function newPulse() {
         IBI = input.runningTime() - lastBeatTime
         lastBeatTime = input.runningTime()
+        rateTotal = 0
         rate[9] = IBI
+        for (let i: number = 0; i < 9; i++) {
+            rate[i] = rate[i + 1]
+            rateTotal += rate[i]
+        }
         rateTotal += rate[9]
         rateTotal /= 10                                 // this gives us an average, so we avoid spikes
         BPM = Math.round(60000 / rateTotal)             // 60,000ms=60secs
         lastBPMSamples.push(BPM)
         lastBPMSamples.shift()
-        resetBeat()
     }
 
     function resetBeat() {
@@ -289,11 +238,13 @@ namespace dotPulse {
         Trough = 1023
         firstBeat = true
         secondBeat = false
+        lastBeatTime = input.runningTime()
         BPM = 0
+        IBI = 600
     }
 
     function getLastSample() {
-        return smoothedValues[smoothedValues.length - 1]
+        return sampleArray[sampleArray.length - 1]
     }
 
     function isValidBeatTime(): boolean {
@@ -312,22 +263,19 @@ namespace dotPulse {
     //% group='2: Extension Blocks'
     export function processLatestSample() {
 
-        smoothSample()  // now we work on smoothedValues instead of the noisy samples
-
         // checks if the peak in a new sample is really the start of a beat
-        if (smoothedValues[smoothedValues.length - 1] > (smoothedValues[smoothedValues.length - 2]) && (getSmoothedSample() > getTriggerLevel())) {
+        if (sampleArray[sampleArray.length - 1] > (sampleArray[sampleArray.length - 2]) && (getLastSample() > getTriggerLevel())) {
             // we are rising.
             rising = true
         }
 
-        else if (rising == true && isValidBeatTime() && (getSmoothedSample() < getTriggerLevel()) && smoothedValues[smoothedValues.length - 1] < smoothedValues[smoothedValues.length - 2]) {
+        else if (rising == true && isValidBeatTime() && (getLastSample() < getTriggerLevel()) && sampleArray[sampleArray.length - 1] < sampleArray[sampleArray.length - 2]) {
             rising = false
             newPulse()                                  // sets pulse to true, sets IBI to N, moves lastBeatTime to input.runningTime
             if (secondBeat) {
                 secondBeat = false                      // We are no longer looking for the second beat
                 for (let i = 0; i < 10; i++) {
                     rate[i] = IBI                       // Seed the running total to take a quick stab at the BPM
-
                 }
             }
 
@@ -339,7 +287,7 @@ namespace dotPulse {
             }
 
         }
-        if (lastBeatTime - input.runningTime() > 2000) {
+        if (input.runningTime() - lastBeatTime > 2000) {
             resetBeat()
         }
     }
@@ -512,9 +460,6 @@ namespace dotPulse {
     //% block='get tempVar, a test variable'
     //export function getTempVar() {
     //    return tempVar
-    //}
-
-
-
+    }
 
 }
