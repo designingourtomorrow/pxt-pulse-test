@@ -124,6 +124,7 @@ namespace dotPulse {
      */
     //% block='set activity points to $value'
     //% group='2: Extension Blocks'
+    //% blockGap=16
     export function setActivityPoints(value: number) {
         totalActivityPoints = (value * 30)
     }
@@ -205,7 +206,7 @@ namespace dotPulse {
         averageSignal -= Math.round(discard / sampleArray.length)
     }
 
-   
+
     function newPulse() {
         IBI = input.runningTime() - lastBeatTime
         lastBeatTime = input.runningTime()
@@ -382,7 +383,7 @@ namespace dotPulse {
     export function getBPM() {
         return BPM
     }
-    
+
 
     /**
     * graphs 'number' out of 'target' on the LED screen
