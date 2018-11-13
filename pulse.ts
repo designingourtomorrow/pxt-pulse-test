@@ -46,7 +46,7 @@ namespace dotPulse {
     let Peak: number = 0
     let Trough: number = 1023
     let averageSignal = averageFiller
-    let triggerOffset: number = 20                          // stays up above average this way.
+    let triggerOffset: number = 50                          // stays up above average this way.
     let firstBeat = true  // looking for the first beat
     let secondBeat = false // not yet looking for the second beat in a row
     let signal: number = 0
@@ -88,7 +88,7 @@ namespace dotPulse {
     * process your pulse and record it on the micro:bit
     */
     //% block="process pulse"
-    //% blockGap=14
+    //% blockGap=16
     //% group='1: Core Blocks'
     export function processPulse() {
         for (let i = 0; i < getSampleLength() / getSampleInterval(); i++) {
@@ -195,28 +195,17 @@ namespace dotPulse {
      */
     //% block="sample length (ms)"
     //% advanced=true
-    //% blockGap=8
+    //% blockGap=16
     export function getSampleLength() {
         return sampleLengthMS
     }
 
-
-    /**
-     * takes a reading from the pin connected to the pulse meter
-     */
-    //% block="take pulse sample"
-    //% blockGap=6
-    //% group="2: Extension Blocks"
-    export function readNextSample() {
-        // assume that reading is atomic, perfect, complete, and does not get in the way of other things
-
-        let newSample: number = pins.analogReadPin(inputPin)
-        sampleArray.push(newSample)
-        let discard: number = sampleArray.shift()
+    function findAverageSignal(newSample: number, discard: number) {
         averageSignal += Math.round(newSample / sampleArray.length)
         averageSignal -= Math.round(discard / sampleArray.length)
     }
 
+   
     function newPulse() {
         IBI = input.runningTime() - lastBeatTime
         lastBeatTime = input.runningTime()
@@ -254,12 +243,27 @@ namespace dotPulse {
         return false
     }
 
+    /**
+    * takes a reading from the pin connected to the pulse meter
+    */
+    //% block="take pulse sample"
+    //% blockGap=6
+    //% group="2: Extension Blocks""
+    export function readNextSample() {
+        // assume that reading is atomic, perfect, complete, and does not get in the way of other things
+
+        let newSample: number = pins.analogReadPin(inputPin)
+        sampleArray.push(newSample)
+        let discard: number = sampleArray.shift()
+        findAverageSignal(newSample, discard)
+    }
+
 
     /**
      * finds if we are in a pulse already, or have just started one
      */
     //% block="process latest sample"
-    //% blockGap=8
+    //% blockGap=16
     //% group='2: Extension Blocks'
     export function processLatestSample() {
 
@@ -315,13 +319,13 @@ namespace dotPulse {
     let maximumPulse: number = 0
     let heartRateReserve: number = 0
     let totalActivityPoints: number = 0
-    let tempVar: number = 0                                           // only used for serial testing, to pull out numbers cleanly
 
     /**
      * @param age eg:12
      * @param restRate eg:70
      */
     //% block="calculate target zone using age:$age and resting Heart Rate: $restRate"
+    //% group='1: Core Blocks'
 
     export function calcModVig(age: number, restRate: number) {
         maximumPulse = 220 - age
@@ -337,7 +341,6 @@ namespace dotPulse {
      */
     //% block="calculate activity points"
     //% blockGap=6
-
     //% group='1: Core Blocks'
     export function calcActivityPoints() {
         if (checkPulseLevel() == 4) {
@@ -347,16 +350,6 @@ namespace dotPulse {
         }
     }
 
-
-    /**
-     * gets Beats Per Minute, which we calculate as we go along
-     */
-    //% block="BPM"
-    //% blockGap=6
-    //% group='1: Core Blocks'
-    export function getBPM() {
-        return BPM
-    }
 
     /**
      * activity in minutes of moderate or half minutes of vigorous exercise
@@ -373,13 +366,23 @@ namespace dotPulse {
      * moderate exercise will count for half
      */
     //% block="activity target"
-    //% blockGap=14
+    //% blockGap=6
     //% group="1: Core Blocks"
     export function getActivityTarget() {
         return activityTarget
     }
 
 
+    /**
+     * gets Beats Per Minute, which we calculate as we go along
+     */
+    //% block="BPM"
+    //% blockGap=6
+    //% group='1: Core Blocks'
+    export function getBPM() {
+        return BPM
+    }
+    
 
     /**
     * graphs 'number' out of 'target' on the LED screen
@@ -396,7 +399,6 @@ namespace dotPulse {
         if (screenValue == 0) {
             basic.clearScreen()
         } else {
-            tempVar = screenValue
             basic.clearScreen()
             basic.pause(500)
             for (let index = 0; index <= screenValue; index++) {
@@ -453,13 +455,4 @@ namespace dotPulse {
         }
         else return -1                          // We're too high, so error out
     }
-
-    /**
-     * We only need this for testing.
-    */
-    //% block='get tempVar, a test variable'
-    //export function getTempVar() {
-    //    return tempVar
-    }
-
 }
